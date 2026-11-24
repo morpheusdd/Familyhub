@@ -1,0 +1,17 @@
+{
+  "title": "Familyhub",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Familyhub",
+        "description": "Gemeinsame Familienzentrale. Klender und Familienprofile richtest du anschließend in Familyhub ein. Alexa Devices muss bereits installiert sein. Die Liste kann auch später hinzugefügt werden.",
+        "data": {
+          "todo_entity": "Alexa-Einkaufsliste (Entitäts-ID)"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Familyhub ist bereits eingerichtet."
+    }
+  }
+}
