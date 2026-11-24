@@ -438,7 +438,6 @@ function renderOverview(hero){
     const items=events.filter(row=>row.date===day);
     days+='<section class="overview-day '+(day===today()?'current':'')+'" data-drop-kind="calendar" data-drop-day="'+day+'"><h3><span>'+escape(dayDate.format(date(day)))+(day===today()?'<span class="today-label">Heute</span>':'')+'</span>'+weatherChip(day)+'</h3><div class="overview-day-events">'+(items.length?items.map(overviewEvent).join(''):'<p class="day-empty">Keine Termine</p>')+'</div></section>';
   }
-  days+=weatherCard();
   for(let day=start;day<=end;day=shift(day,1)){
     const dishes=meals.filter(row=>row.date===day);
     mealRows+='<div class="week-meal '+(day===today()?'current':'')+'" data-drop-kind="meal" data-drop-day="'+day+'"><time>'+dayDate.format(date(day))+'</time><div>'+
@@ -449,7 +448,7 @@ function renderOverview(hero){
     '<div class="overview-side"><section class="panel meal"><div class="panel-head">'+glyph('meal')+'<h2>Essensplan</h2><span class="overview-range">Do–Mi · '+escape(shortDate.format(date(start))+' – '+shortDate.format(date(end)))+'</span>'+button('page','meal',icon('arrow'),'icon','Essensplan öffnen')+'</div><div class="week-meals">'+mealRows+'</div></section>'+
     overviewCard('task',tasks)+'</div></div>'+
     '<div class="overview-links">'+button('page','buy',icon('cart')+' Einkaufsliste','ghost')+button('page','outing','Unternehmungen','ghost')+'</div>'+
-    button('kiosk-toggle','',icon(kiosk.on?'shrink':'expand'),'kiosk-button',kiosk.on?'Vollbild beenden':'Vollbild für Tablet');
+    (kiosk.on?'':button('kiosk-toggle','',icon('expand'),'kiosk-button','Vollbild für Tablet'));
 }
 function openOverviewEvent(id){
   const row=visibleRows().find(item=>item.type==='calendar'&&item.id===id);
@@ -479,7 +478,7 @@ function footer(){
 }
 function settings(){
   return '<div class="grid">'+
-    '<section class="panel settings"><h2>Familienmitglieder</h2><p>Familyhub 1.4.0</p><p>Die Namen gelten im Kalender und in der Aufgabenliste. Profilbilder werden in Home Assistant gespeichert.</p><form id="family-form" class="family-form">'+
+    '<section class="panel settings"><h2>Familienmitglieder</h2><p>Familyhub 1.4.1</p><p>Die Namen gelten im Kalender und in der Aufgabenliste. Profilbilder werden in Home Assistant gespeichert.</p><form id="family-form" class="family-form">'+
     members.map(member=>'<div class="family-member"><label>Familienname<input name="'+member.id+'" aria-label="'+member.name+'" maxlength="45" value="'+escape(memberNames[member.id]||'')+'" placeholder="'+member.name+'"></label><div class="portrait-editor" id="portrait-'+member.id+'">'+portraitEditor(member)+'</div></div>').join('')+
     '<button class="primary" type="submit">Namen speichern</button></form></section>'+
     '<section class="panel settings"><h2>Klender abonnieren</h2><p>Kopiere in Klender unter „Termine exportieren“ den iCalendar-Link. Teilnehmernamen aus dem Abo werden mit den Namen deiner Familienmitglieder abgeglichen. Home Assistant aktualisiert Klender alle 15 Minuten, auch bei geschlossener Ansicht.</p>'+
@@ -516,7 +515,7 @@ function render(){
   const heading=overview?'Heute & nächste Woche':page==='calendar'?'Familienagenda':sectionNames[page];
   const subtitle={mealidea:'Sammle Wünsche und plane sie für eine Woche ein.',outing:'Ideen und Wünsche für eure gemeinsame Zeit.',overview:'Aufgaben, Einkäufe, Termine und Mahlzeiten an einem Ort.',task:'Weise Aufgaben zu und halte fest, wer sie erledigt hat.',buy:'Sieh deine Einkäufe nach Ladenkategorien sortiert.',calendar:'Plane Termine und markiere, wer dabei ist.',meal:'Plane Mahlzeiten und hinterlege Links zu deinen Rezepten.',routine:'Hake jeden wiederkehrenden Termin einzeln ab.',settings:'Bearbeite Familiennamen, verbinde Klender und sichere deine Daten.'}[page];
   const cta=page==='settings'?'':button('add',overview?'':page,icon('plus')+(overview?'Neuer Eintrag':sections[page].one+' hinzufügen'),'primary');
-  const hero='<section class="hero"><div><div class="eyebrow">'+escape(fullDate.format(date(today())))+'</div><h1>'+heading+'</h1><p>'+subtitle+'</p></div><div class="hero-side">'+(overview?heroWeather():'')+(overview&&kiosk.on?'<div class="hero-clock" id="hero-clock">'+escape(clockText())+'</div>':cta)+'</div></section>';
+  const hero='<section class="hero"><div><div class="eyebrow">'+escape(fullDate.format(date(today())))+'</div><h1>'+heading+'</h1><p>'+subtitle+'</p></div><div class="hero-side">'+(overview?heroWeather():'')+(overview&&kiosk.on?'<div class="hero-clock" id="hero-clock">'+escape(clockText())+'</div>'+button('kiosk-toggle','',icon('shrink'),'kiosk-exit','Vollbild beenden'):cta)+'</div></section>';
   if(page==='settings'){$('#app').innerHTML=hero+'<div class="toolbar"></div>'+settings()+footer();return;}
   if(overview){renderOverview(hero);return;}
   const rows=visibleRows();
@@ -902,7 +901,7 @@ function setKiosk(on){
   lastActivity=Date.now();
   if(!on){hideSaver();document.body.style.removeProperty('--shift-x');document.body.style.removeProperty('--shift-y');}
   if(on&&state.page!=='overview')navigate('overview');else render();
-  notify(on?'Vollbild aktiv. Zum Beenden unten rechts tippen.':'Vollbild beendet.');
+  notify(on?'Vollbild aktiv. Zum Beenden das Symbol neben der Uhr antippen.':'Vollbild beendet.');
 }
 function tabletSettings(){
   const check=(name,label)=>'<label class="check-line"><input type="checkbox" name="'+name+'" '+(kiosk[name]?'checked':'')+'> '+label+'</label>';

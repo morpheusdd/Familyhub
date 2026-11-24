@@ -313,3 +313,39 @@ body.kiosk .hero .eyebrow{margin-bottom:4px}
 .tablet-times{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .check-line{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text)}
 .check-line input{width:17px;height:17px;accent-color:var(--accent)}
+
+/* ---------- 1.4.1: Übersicht – heute über die ganze Breite, 6 Tage darunter ---------- */
+body[data-page="overview"] .overview-days{grid-template-rows:minmax(84px,.8fr) repeat(3,minmax(96px,1fr))}
+body[data-page="overview"] .overview-day.current{grid-column:1/-1;border-right:0}
+body[data-page="overview"] .overview-day:nth-child(odd){border-right:0}
+body[data-page="overview"] .overview-day:nth-child(even){border-right:1px solid var(--line)}
+body[data-page="overview"] .overview-day:nth-last-child(-n+2){border-bottom:0}
+body[data-page="overview"] .overview-day.current .overview-day-events{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:14px}
+
+/* ---------- 1.4.1: kleine Ziehgriffe auf der Übersicht ---------- */
+body[data-page="overview"] .move-handle,
+body[data-page="overview"] .overview-event-wrap .move-handle{width:18px;min-height:22px;height:22px;margin-right:4px;border-radius:5px}
+body[data-page="overview"] .grip-dots{width:8px;height:12px;background-size:4px 4px;background-image:radial-gradient(circle,currentColor 1px,transparent 1.3px)}
+body[data-page="overview"] .overview-event{padding:3px 0;grid-template-columns:34px minmax(0,1fr) auto}
+body[data-page="overview"] .week-meal{padding:4px 0;min-height:30px}
+body[data-page="overview"] .week-meals{grid-template-rows:repeat(7,minmax(26px,1fr))}
+@media(pointer:coarse){
+  body[data-page="overview"] .move-handle,
+  body[data-page="overview"] .overview-event-wrap .move-handle{width:20px;min-height:24px;height:24px}
+}
+
+/* ---------- 1.4.1: Vollbild ohne Scrollen ---------- */
+body.kiosk main{overflow:hidden}
+body.kiosk[data-page="overview"] .content{height:100vh;height:100dvh;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:10px;padding:12px 16px}
+body.kiosk[data-page="overview"] .hero{padding:10px 16px}
+body.kiosk[data-page="overview"] .hero h1{font-size:26px}
+body.kiosk[data-page="overview"] .weekly-overview{flex:1;min-height:0;height:auto}
+body.kiosk[data-page="overview"] .weekly-overview .panel{min-height:0;overflow:hidden}
+body.kiosk[data-page="overview"] .overview-days{min-height:0;grid-template-rows:minmax(0,.8fr) repeat(3,minmax(0,1fr))}
+body.kiosk[data-page="overview"] .overview-day{min-height:0;overflow:hidden}
+body.kiosk[data-page="overview"] .overview-side{min-height:0;grid-template-rows:auto minmax(0,1fr)}
+body.kiosk[data-page="overview"] .overview-list{min-height:0;overflow:hidden}
+body.kiosk[data-page="overview"] .show-all{flex:none}
+.kiosk-exit{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;border:1px solid #ffffff22;background:#ffffff0d;color:var(--muted);opacity:.55}
+.kiosk-exit svg{width:18px;height:18px}
+.kiosk-exit:hover,.kiosk-exit:focus-visible{opacity:1;color:var(--text)}

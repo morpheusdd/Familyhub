@@ -4,6 +4,11 @@ Familienplaner als Seitenleisten-Panel für Home Assistant: Wochenkalender mit K
 Personenzuordnung, Essensplan (Do–Mi, verschiebbar), Aufgaben und Routinen mit „Erledigt von“,
 Alexa-Einkaufsliste und Unternehmungen.
 
+## Neu in 1.4.1
+- Übersicht: heute über die ganze Breite, darunter 6 Tage; separate Wetterkachel entfernt.
+- Kleinere Ziehgriffe bei Essensplan und Terminen.
+- Vollbild passt ohne Scrollen auf den Bildschirm; Beenden-Symbol neben der Uhr.
+
 ## Neu in 1.4.0
 - **Wetter** auf der Übersicht: aktuell im Kopfbereich, pro Tag im Kalender und als 7-Tage-Kachel
   (Wetter-Entität automatisch, Standard `weather.forecast_home`).
