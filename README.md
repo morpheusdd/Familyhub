@@ -4,6 +4,9 @@ Familienplaner als Seitenleisten-Panel für Home Assistant: Wochenkalender mit K
 Personenzuordnung, Essensplan (Do–Mi, verschiebbar), Aufgaben und Routinen mit „Erledigt von“,
 Alexa-Einkaufsliste und Unternehmungen.
 
+## Neu in 1.4.3
+- Übersicht: die Links „Einkaufsliste“ und „Unternehmungen“ unten entfallen (über die Seitenleiste bzw. die Symbolleiste im Vollbild erreichbar).
+
 ## Neu in 1.4.2
 - Vollbild: farbige Symbole in der Kopfzeile springen zu Kalender, Essensplan, Aufgaben, Einkäufen und Unternehmungen.
 - Unterseiten im Vollbild haben einen Knopf „← Übersicht“; nach 2 Minuten ohne Berührung geht es automatisch zurück (einstellbar).

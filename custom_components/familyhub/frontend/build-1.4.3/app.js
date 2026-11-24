@@ -447,7 +447,6 @@ function renderOverview(hero){
     '<section class="panel overview-calendar"><div class="panel-head">'+glyph('calendar')+'<h2>Familienkalender</h2><span class="overview-range">'+escape(shortDate.format(date(today()))+' – '+shortDate.format(date(last)))+'</span>'+button('page','calendar',icon('arrow'),'icon','Familienkalender öffnen')+'</div><div class="overview-days">'+days+'</div></section>'+
     '<div class="overview-side"><section class="panel meal"><div class="panel-head">'+glyph('meal')+'<h2>Essensplan</h2><span class="overview-range">Do–Mi · '+escape(shortDate.format(date(start))+' – '+shortDate.format(date(end)))+'</span>'+button('page','meal',icon('arrow'),'icon','Essensplan öffnen')+'</div><div class="week-meals">'+mealRows+'</div></section>'+
     overviewCard('task',tasks)+'</div></div>'+
-    '<div class="overview-links">'+button('page','buy',icon('cart')+' Einkaufsliste','ghost')+button('page','outing','Unternehmungen','ghost')+'</div>'+
     (kiosk.on?'':button('kiosk-toggle','',icon('expand'),'kiosk-button','Vollbild für Tablet'));
 }
 function openOverviewEvent(id){
@@ -478,7 +477,7 @@ function footer(){
 }
 function settings(){
   return '<div class="grid">'+
-    '<section class="panel settings"><h2>Familienmitglieder</h2><p>Familyhub 1.4.2</p><p>Die Namen gelten im Kalender und in der Aufgabenliste. Profilbilder werden in Home Assistant gespeichert.</p><form id="family-form" class="family-form">'+
+    '<section class="panel settings"><h2>Familienmitglieder</h2><p>Familyhub 1.4.3</p><p>Die Namen gelten im Kalender und in der Aufgabenliste. Profilbilder werden in Home Assistant gespeichert.</p><form id="family-form" class="family-form">'+
     members.map(member=>'<div class="family-member"><label>Familienname<input name="'+member.id+'" aria-label="'+member.name+'" maxlength="45" value="'+escape(memberNames[member.id]||'')+'" placeholder="'+member.name+'"></label><div class="portrait-editor" id="portrait-'+member.id+'">'+portraitEditor(member)+'</div></div>').join('')+
     '<button class="primary" type="submit">Namen speichern</button></form></section>'+
     '<section class="panel settings"><h2>Klender abonnieren</h2><p>Kopiere in Klender unter „Termine exportieren“ den iCalendar-Link. Teilnehmernamen aus dem Abo werden mit den Namen deiner Familienmitglieder abgeglichen. Home Assistant aktualisiert Klender alle 15 Minuten, auch bei geschlossener Ansicht.</p>'+
