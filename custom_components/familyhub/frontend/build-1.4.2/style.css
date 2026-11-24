@@ -349,3 +349,26 @@ body.kiosk[data-page="overview"] .show-all{flex:none}
 .kiosk-exit{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;border:1px solid #ffffff22;background:#ffffff0d;color:var(--muted);opacity:.55}
 .kiosk-exit svg{width:18px;height:18px}
 .kiosk-exit:hover,.kiosk-exit:focus-visible{opacity:1;color:var(--text)}
+
+/* ---------- 1.4.2: Navigation im Vollbild (Kopfzeile, nur Symbole) ---------- */
+body.kiosk main{overflow:auto}
+body.kiosk[data-page="overview"] main{overflow:hidden}
+body.kiosk:not([data-page="overview"]) .content{max-width:none;padding:14px 18px 30px}
+.hero .kiosk-nav{display:flex;gap:8px;margin-right:4px}
+.kiosk-tab{display:grid;place-items:center;padding:5px;border-radius:12px;border:1px solid #9aebd436;background:#0f1d2233}
+.kiosk-tab:hover,.kiosk-tab:focus-visible{border-color:var(--accent)}
+.kiosk-tab .glyph{width:34px;height:34px;border-radius:9px}
+.kiosk-tab .glyph svg{width:18px;height:18px}
+.glyph.task{color:var(--accent);background:#254038}
+.glyph.outing{color:#f5b9a6;background:#402f2e}
+body.kiosk[data-page="overview"] .hero h1{display:none}
+body.kiosk[data-page="overview"] .hero .eyebrow{font-size:20px;letter-spacing:-.01em;text-transform:none;color:var(--text);font-weight:750;margin:0;white-space:nowrap}
+body.kiosk[data-page="overview"] .hero{padding:8px 16px}
+body.kiosk[data-page="overview"] .hero-side{gap:10px}
+.kiosk-back{font-size:15px;padding:11px 18px}
+@media(max-width:1000px){body.kiosk[data-page="overview"] .hero .eyebrow{font-size:16px}.kiosk-tab .glyph{width:30px;height:30px}}
+
+/* ---------- 1.4.2: kleine Ziehgriffe auf allen Seiten ---------- */
+.move-handle,.overview-event-wrap .move-handle,.calendar-mini>.move-handle{width:18px;min-height:22px;height:22px;margin-right:4px;border-radius:5px;align-self:center}
+.grip-dots{width:8px;height:12px;background-size:4px 4px;background-image:radial-gradient(circle,currentColor 1px,transparent 1.3px)}
+@media(pointer:coarse){.move-handle,.overview-event-wrap .move-handle,.calendar-mini>.move-handle{width:20px;min-height:24px;height:24px}}

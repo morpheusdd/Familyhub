@@ -7,6 +7,6 @@ const paths={
   meal:'<path d="M4 3v5a3 3 0 0 0 6 0V3M7 3v18m10 0V3c-3 2-4 5-4 9h4"/>',
   repeat:'<path d="m17 2 4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4m14-3v4a3 3 0 0 1-3 3H3"/>',
   link:'<path d="m10 13 4-4m-7 6-1 1a3.5 3.5 0 0 0 5 5l4-4a3.5 3.5 0 0 0 0-5m2-3 1-1a3.5 3.5 0 0 0-5-5L9 7a3.5 3.5 0 0 0 0 5"/>',
-  plus:'<path d="M12 5v14M5 12h14"/>',expand:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',shrink:'<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>',arrow:'<path d="m9 6 6 6-6 6"/>',edit:'<path d="m4 16 12-12a2 2 0 0 1 4 4L8 20l-5 1zM14 6l4 4"/>'
+  plus:'<path d="M12 5v14M5 12h14"/>',outing:'<path d="m3 20 6-10 4 6 3-4 5 8z"/><circle cx="17" cy="6" r="2"/>',expand:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',shrink:'<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>',arrow:'<path d="m9 6 6 6-6 6"/>',edit:'<path d="m4 16 12-12a2 2 0 0 1 4 4L8 20l-5 1zM14 6l4 4"/>'
 };
 export const icon=name=>'<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+paths[name]+'</svg>';

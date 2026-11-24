@@ -478,7 +478,7 @@ function footer(){
 }
 function settings(){
   return '<div class="grid">'+
-    '<section class="panel settings"><h2>Familienmitglieder</h2><p>Familyhub 1.4.1</p><p>Die Namen gelten im Kalender und in der Aufgabenliste. Profilbilder werden in Home Assistant gespeichert.</p><form id="family-form" class="family-form">'+
+    '<section class="panel settings"><h2>Familienmitglieder</h2><p>Familyhub 1.4.2</p><p>Die Namen gelten im Kalender und in der Aufgabenliste. Profilbilder werden in Home Assistant gespeichert.</p><form id="family-form" class="family-form">'+
     members.map(member=>'<div class="family-member"><label>Familienname<input name="'+member.id+'" aria-label="'+member.name+'" maxlength="45" value="'+escape(memberNames[member.id]||'')+'" placeholder="'+member.name+'"></label><div class="portrait-editor" id="portrait-'+member.id+'">'+portraitEditor(member)+'</div></div>').join('')+
     '<button class="primary" type="submit">Namen speichern</button></form></section>'+
     '<section class="panel settings"><h2>Klender abonnieren</h2><p>Kopiere in Klender unter „Termine exportieren“ den iCalendar-Link. Teilnehmernamen aus dem Abo werden mit den Namen deiner Familienmitglieder abgeglichen. Home Assistant aktualisiert Klender alle 15 Minuten, auch bei geschlossener Ansicht.</p>'+
@@ -515,7 +515,7 @@ function render(){
   const heading=overview?'Heute & nächste Woche':page==='calendar'?'Familienagenda':sectionNames[page];
   const subtitle={mealidea:'Sammle Wünsche und plane sie für eine Woche ein.',outing:'Ideen und Wünsche für eure gemeinsame Zeit.',overview:'Aufgaben, Einkäufe, Termine und Mahlzeiten an einem Ort.',task:'Weise Aufgaben zu und halte fest, wer sie erledigt hat.',buy:'Sieh deine Einkäufe nach Ladenkategorien sortiert.',calendar:'Plane Termine und markiere, wer dabei ist.',meal:'Plane Mahlzeiten und hinterlege Links zu deinen Rezepten.',routine:'Hake jeden wiederkehrenden Termin einzeln ab.',settings:'Bearbeite Familiennamen, verbinde Klender und sichere deine Daten.'}[page];
   const cta=page==='settings'?'':button('add',overview?'':page,icon('plus')+(overview?'Neuer Eintrag':sections[page].one+' hinzufügen'),'primary');
-  const hero='<section class="hero"><div><div class="eyebrow">'+escape(fullDate.format(date(today())))+'</div><h1>'+heading+'</h1><p>'+subtitle+'</p></div><div class="hero-side">'+(overview?heroWeather():'')+(overview&&kiosk.on?'<div class="hero-clock" id="hero-clock">'+escape(clockText())+'</div>'+button('kiosk-toggle','',icon('shrink'),'kiosk-exit','Vollbild beenden'):cta)+'</div></section>';
+  const hero='<section class="hero"><div><div class="eyebrow">'+escape(fullDate.format(date(today())))+'</div><h1>'+heading+'</h1><p>'+subtitle+'</p></div><div class="hero-side">'+(overview&&kiosk.on?kioskNav():'')+(overview?heroWeather():'')+(overview&&kiosk.on?'<div class="hero-clock" id="hero-clock">'+escape(clockText())+'</div>'+button('kiosk-toggle','',icon('shrink'),'kiosk-exit','Vollbild beenden'):kiosk.on?button('page','overview','← Übersicht','primary kiosk-back','Zurück zur Übersicht'):cta)+'</div></section>';
   if(page==='settings'){$('#app').innerHTML=hero+'<div class="toolbar"></div>'+settings()+footer();return;}
   if(overview){renderOverview(hero);return;}
   const rows=visibleRows();
@@ -878,7 +878,7 @@ $('#move-form').addEventListener('submit',async event=>{
    Settings are stored per device (localStorage), so a wall tablet can run in
    kiosk mode while phones keep the normal view. */
 const kioskKey='familyhub-kiosk-v1';
-const kioskDefaults={on:false,nightMode:true,nightStart:'22:00',nightEnd:'06:00',saverMinutes:15,shift:true};
+const kioskDefaults={on:false,nightMode:true,nightStart:'22:00',nightEnd:'06:00',saverMinutes:15,shift:true,returnMinutes:2};
 function readKiosk(){try{return JSON.parse(localStorage.getItem(kioskKey))||{};}catch{return {};}}
 const kiosk={...kioskDefaults,...readKiosk()};
 function saveKiosk(){try{localStorage.setItem(kioskKey,JSON.stringify(kiosk));}catch{/* private mode */}}
@@ -903,6 +903,10 @@ function setKiosk(on){
   if(on&&state.page!=='overview')navigate('overview');else render();
   notify(on?'Vollbild aktiv. Zum Beenden das Symbol neben der Uhr antippen.':'Vollbild beendet.');
 }
+function kioskNav(){
+  const items=[['calendar','calendar','Familienkalender'],['meal','meal','Essensplan'],['task','check','Aufgaben'],['buy','cart','Einkäufe'],['outing','outing','Unternehmungen']];
+  return '<nav class="kiosk-nav" aria-label="Bereiche">'+items.map(([page,ic,label])=>'<button type="button" class="kiosk-tab" data-action="page" data-value="'+page+'" aria-label="'+label+'" title="'+label+'"><span class="glyph '+page+'">'+icon(ic)+'</span></button>').join('')+'</nav>';
+}
 function tabletSettings(){
   const check=(name,label)=>'<label class="check-line"><input type="checkbox" name="'+name+'" '+(kiosk[name]?'checked':'')+'> '+label+'</label>';
   return '<section class="panel settings" id="tablet-settings"><h2>Tablet & Vollbild</h2><p>Gilt nur für dieses Gerät. Im Vollbild zeigt Familyhub nur die Übersicht, hält den Bildschirm wach und schützt ihn vor dem Einbrennen.</p>'+
@@ -910,6 +914,7 @@ function tabletSettings(){
     check('shift','Inhalt alle 2 Minuten minimal verschieben (gegen Einbrennen)')+
     check('nightMode','Nachtmodus: Bildschirm abdunkeln, nur Uhr anzeigen')+
     '<div class="tablet-times"><label>Nacht von<input type="time" name="nightStart" value="'+escape(kiosk.nightStart)+'"></label><label>bis<input type="time" name="nightEnd" value="'+escape(kiosk.nightEnd)+'"></label></div>'+
+    '<label>Im Vollbild zurück zur Übersicht nach (Minuten ohne Berührung, 0 = aus)<input type="number" name="returnMinutes" min="0" max="60" step="1" value="'+escape(kiosk.returnMinutes)+'"></label>'+
     '<label>Bildschirmschoner nach (Minuten ohne Berührung, 0 = aus)<input type="number" name="saverMinutes" min="0" max="240" step="1" value="'+escape(kiosk.saverMinutes)+'"></label>'+
     '<div class="actions"><button class="primary" type="submit">Speichern</button>'+button('kiosk-test-saver','','Bildschirmschoner testen','ghost')+button('kiosk-toggle','',kiosk.on?'Vollbild beenden':'Vollbild starten','ghost')+'</div></form>'+
     '<p>Tipp fürs iPad: Automatische Sperre auf „Nie“ stellen (Einstellungen → Anzeige & Helligkeit) und mit „Geführter Zugriff“ die App fixieren.</p></section>';
@@ -920,8 +925,9 @@ document.addEventListener('submit',event=>{
   const data=new FormData(event.target);
   const start=String(data.get('nightStart')||''),end=String(data.get('nightEnd')||'');
   const minutes=Math.max(0,Math.min(240,Math.round(Number(data.get('saverMinutes'))||0)));
+  const back=Math.max(0,Math.min(60,Math.round(Number(data.get('returnMinutes'))||0)));
   if(!/^\d{2}:\d{2}$/.test(start)||!/^\d{2}:\d{2}$/.test(end)){notify('Bitte gültige Uhrzeiten eingeben.');return;}
-  Object.assign(kiosk,{shift:data.has('shift'),nightMode:data.has('nightMode'),nightStart:start,nightEnd:end,saverMinutes:minutes});
+  Object.assign(kiosk,{shift:data.has('shift'),nightMode:data.has('nightMode'),nightStart:start,nightEnd:end,saverMinutes:minutes,returnMinutes:back});
   saveKiosk();notify('Tablet-Einstellungen gespeichert (nur dieses Gerät).');
 });
 function saverHTML(){
@@ -971,6 +977,9 @@ function kioskTick(){
   if(!kiosk.on){if(saverMode)hideSaver();return;}
   const idle=Date.now()-lastActivity;
   const busy=!!document.querySelector('dialog[open]')||isMoving();
+  // On a sub page, go back to the overview after a while without touch.
+  const typing=document.activeElement?.matches?.('input,textarea,select');
+  if(!busy&&!typing&&state.page!=='overview'&&kiosk.returnMinutes>0&&idle>kiosk.returnMinutes*60*1000){navigate('overview');return;}
   let want='';
   if(!busy&&inNight()&&Date.now()>wakeUntil&&idle>60*1000)want='night';
   else if(!busy&&kiosk.saverMinutes>0&&idle>kiosk.saverMinutes*60*1000)want='idle';
@@ -1000,7 +1009,7 @@ setInterval(kioskMinute,60*1000);
 
 function useHash(){
   const page=location.hash.slice(1);
-  state.page=kiosk.on?'overview':Object.hasOwn(sectionNames,page)?page:'overview';
+  state.page=Object.hasOwn(sectionNames,page)?page:'overview';
   state.status=state.page==='buy'?'open':'all';state.category='';state.shoppingList='';state.person='';render();
 }
 window.addEventListener('familyhub-conflict',()=>{
@@ -1016,6 +1025,7 @@ window.addEventListener('familyhub-conflict',()=>{
 window.addEventListener('popstate',useHash);
 document.addEventListener('visibilitychange',refreshWhenVisible);
 setInterval(refreshWhenVisible,refreshInterval);
+if(kiosk.on&&location.hash&&location.hash!=='#overview')history.replaceState(null,'','#overview');
 useHash();
 void loadShopping();
 void loadWeather();

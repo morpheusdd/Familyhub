@@ -1,4 +1,4 @@
-const FH_VERSION='1.4.1';
+const FH_VERSION='1.4.2';
 const FH_TAG='familyhub-panel-'+FH_VERSION.replaceAll('.','-');
 const ACTIONS=['snapshot','write','calendar','calendar_remove','shopping/list','shopping/add','shopping/check','settings/todo','weather','settings/weather'];
 
