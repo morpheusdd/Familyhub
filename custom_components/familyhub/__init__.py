@@ -85,7 +85,9 @@ def validate_value(key, value):
                 raise ValueError("Unbekannte Person.")
             if row.get("suggestedBy") and row["suggestedBy"] not in MEMBERS:
                 raise ValueError("Unbekannte Person.")
-            if row.get("completedBy") and row["completedBy"] not in MEMBERS:
+            if row.get("completedBy") and (not isinstance(row["completedBy"], str) or row["completedBy"] not in MEMBERS):
+                raise ValueError("Unbekannte Person.")
+            if not isinstance(row.get("completedByList", []), list) or not set(row.get("completedByList", [])).issubset(MEMBERS):
                 raise ValueError("Unbekannte Person.")
             if not isinstance(row.get("attendees", []), list) or not set(row.get("attendees", [])).issubset(MEMBERS):
                 raise ValueError("Unbekannte Person.")

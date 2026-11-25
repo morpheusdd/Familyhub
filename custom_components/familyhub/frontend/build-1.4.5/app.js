@@ -76,8 +76,11 @@ async function saveAvatar(id,photo){
 // Tasks and routines keep several responsible people in `attendees`; older
 // entries with a single `assignee` are still read.
 const assignedOf=row=>Array.isArray(row?.attendees)&&row.attendees.length?row.attendees.filter(isMember):[row?.assignee].filter(Boolean);
-const attendeePicker=(ids,legend='Familienmitglieder')=>'<fieldset class="full attendee-picker"><legend>'+legend+'</legend><div>'+
-  members.map(member=>'<label><input type="checkbox" name="attendees" value="'+member.id+'" '+(ids?.includes(member.id)?'checked':'')+'>'+memberBadge(member.id)+'</label>').join('')+'</div></fieldset>';
+// Several people can finish a task together: completedByList holds all of them,
+// completedBy keeps the first one for older views and backups.
+const completersOf=row=>Array.isArray(row?.completedByList)&&row.completedByList.length?row.completedByList.filter(isMember):[row?.completedBy].filter(Boolean);
+const attendeePicker=(ids,legend='Familienmitglieder',name='attendees')=>'<fieldset class="full attendee-picker"><legend>'+legend+'</legend><div>'+
+  members.map(member=>'<label><input type="checkbox" name="'+name+'" value="'+member.id+'" '+(ids?.includes(member.id)?'checked':'')+'>'+memberBadge(member.id)+'</label>').join('')+'</div></fieldset>';
 
 const klenderPeopleKey='haushaltszentrale-klender-people-v1';
 const klenderCategoriesKey='familyhub-calendar-categories-v1';
@@ -171,7 +174,7 @@ function matchesPerson(row){
   if(!state.person)return true;
   const assigned=row.type==='calendar'?row.attendees||[]:assignedOf(row);
   if(state.person==='unassigned')return !assigned.length;
-  return assigned.includes(state.person)||(row.type==='task'&&row.done&&row.completedBy===state.person);
+  return assigned.includes(state.person)||(row.type==='task'&&row.done&&completersOf(row).includes(state.person));
 }
 function updateFeedStatus(){
   const status=$('#klender-status');
@@ -262,7 +265,7 @@ function rowHTML(row,grouped){
   const meta=[dateLabel,extra,row.type==='buy'&&(!grouped||row.list&&listName(row)!=='Standard')?listName(row):'',row.type==='buy'&&grouped?'':row.category].filter(Boolean).map(escape).join(' · ');
   const people=['task','routine'].includes(row.type)
       ? (assignedOf(row).length?assignedOf(row).map(id=>memberBadge(id,'Zuständig: ')).join(''):'<span class="member-badge free">Freie Aufgabe</span>')+
-        (row.done?memberBadge(row.completedBy,'Erledigt von: '):'')
+        (row.done?completersOf(row).map(id=>memberBadge(id,'Erledigt von: ')).join(''):'')
       : ['mealidea','outing'].includes(row.type)?memberBadge(row.suggestedBy,'Vorgeschlagen von: '):'';
   const late=!row.done&&row.date&&row.date<today()&&['task','buy','routine'].includes(row.type);
   const link=['meal','mealidea','outing'].includes(row.type)?safeURL(row.url):'';
@@ -480,7 +483,7 @@ function footer(){
 }
 function settings(){
   return '<div class="grid">'+
-    '<section class="panel settings"><h2>Familienmitglieder</h2><p>Familyhub 1.4.4</p><p>Die Namen gelten im Kalender und in der Aufgabenliste. Profilbilder werden in Home Assistant gespeichert.</p><form id="family-form" class="family-form">'+
+    '<section class="panel settings"><h2>Familienmitglieder</h2><p>Familyhub 1.4.5</p><p>Die Namen gelten im Kalender und in der Aufgabenliste. Profilbilder werden in Home Assistant gespeichert.</p><form id="family-form" class="family-form">'+
     members.map(member=>'<div class="family-member"><label>Familienname<input name="'+member.id+'" aria-label="'+member.name+'" maxlength="45" value="'+escape(memberNames[member.id]||'')+'" placeholder="'+member.name+'"></label><div class="portrait-editor" id="portrait-'+member.id+'">'+portraitEditor(member)+'</div></div>').join('')+
     '<button class="primary" type="submit">Namen speichern</button></form></section>'+
     '<section class="panel settings"><h2>Klender abonnieren</h2><p>Kopiere in Klender unter „Termine exportieren“ den iCalendar-Link. Teilnehmernamen aus dem Abo werden mit den Namen deiner Familienmitglieder abgeglichen. Home Assistant aktualisiert Klender alle 15 Minuten, auch bei geschlossener Ansicht.</p>'+
@@ -498,10 +501,10 @@ function settings(){
 function taskReport(){
   const [start,end]=bounds(state.period,state.anchor);
   let rows=completedTasks(entries,start,end);
-  if(state.person)rows=rows.filter(row=>state.person==='unassigned'?!row.completedBy:row.completedBy===state.person);
+  if(state.person)rows=rows.filter(row=>state.person==='unassigned'?!completersOf(row).length:completersOf(row).includes(state.person));
   const people=[...members.map(m=>({id:m.id,name:memberName(m)})),{id:'',name:'Ohne Personenangabe'}];
   return '<section class="panel task-report"><div class="panel-head"><h2>Wer hat was erledigt?</h2></div><div class="settings"><p>'+escape(shortDate.format(date(start))+' – '+shortDate.format(date(end)))+' · Nach erledigender Person, unabhängig vom Statusfilter. Bei älteren Einträgen wird ersatzweise die Fälligkeit verwendet; Einträge ohne Datum werden gesondert gekennzeichnet.</p>'+people.filter(p=>!state.person||(state.person==='unassigned'?!p.id:p.id===state.person)).map(person=>{
-    const own=rows.filter(row=>(row.completedBy||'')===person.id);
+    const own=rows.filter(row=>person.id?completersOf(row).includes(person.id):!completersOf(row).length);
     return '<details class="report-person"><summary>'+escape(person.name)+' · '+own.length+' erledigt</summary>'+(own.length?'<ul>'+own.map(row=>'<li><strong>'+escape(row.title)+'</strong> · '+(row.type==='routine'?'Routine':'Aufgabe')+' · '+escape(row.completionDate?shortDate.format(date(row.completionDate))+(row.exactCompletion?'':' (Fälligkeit; Erledigungsdatum unbekannt)'):'Datum unbekannt')+'</li>').join('')+'</ul>':'<p>Keine Erledigungen im Zeitraum.</p>')+'</details>';
   }).join('')+'</div></section>';
 }
@@ -548,7 +551,7 @@ function formFields(type,row={}){
     (type==='calendar'?field('time','Uhrzeit','time',row.time)+
       attendeePicker(row.attendees):'')+
     (['task','routine'].includes(type)?attendeePicker(assignedOf(row),'Zuständig – nichts ankreuzen = freie Aufgabe')+
-      (row.done?'<label>Erledigt von<select name="completedBy">'+option('','Ohne Angabe',row.completedBy||'')+memberOptions(row.completedBy)+'</select></label>':''):'')+
+      (row.done?attendeePicker(completersOf(row),'Erledigt von (optional)','completedByList'):''):'')+
     (['mealidea','outing'].includes(type)?'<label>Vorgeschlagen von<select name="suggestedBy">'+option('','Ohne Angabe',row.suggestedBy||'')+memberOptions(row.suggestedBy)+'</select></label>':'')+
     (['meal','mealidea','outing'].includes(type)?field('url','Rezeptlink (z. B. Choosy)','url',row.url,'placeholder="https://…" maxlength="1500"',true):'')+
     (['task','routine'].includes(type)?'<label>Wiederholung<select name="repeat">'+(type==='task'?option('none','Einmalig',row.repeat||'none'):'')+Object.entries(intervals).map(([id,label])=>option(id,label,row.repeat||(type==='routine'?'weekly':'none'))).join('')+'</select></label>':'')+
@@ -586,6 +589,7 @@ $('#entry').addEventListener('submit',async event=>{
   const values=Object.fromEntries([...form].map(([k,v])=>[k,v.trim()]));
   if(['calendar','task','routine'].includes(editing.type))values.attendees=form.getAll('attendees').filter(isMember);
   if(['task','routine'].includes(editing.type))values.assignee='';
+  if(form.has('completedByList')||editing.type==='task'&&$('#fields [name=completedByList]')){values.completedByList=form.getAll('completedByList').filter(isMember);values.completedBy=values.completedByList[0]||'';}
   if(!values.title){const title=$('#fields [name=title]');title.setCustomValidity('Bitte gib einen Titel ein.');title.reportValidity();title.addEventListener('input',()=>title.setCustomValidity(''),{once:true});return;}
   if(values.url&&!safeURL(values.url)){const url=$('#fields [name=url]');url.setCustomValidity('Bitte verwende einen HTTP- oder HTTPS-Link.');url.reportValidity();url.addEventListener('input',()=>url.setCustomValidity(''),{once:true});return;}
   const previous=entries.find(row=>row.id===editing.id);
@@ -603,12 +607,12 @@ function focusTaskCheck(id){
 $('#completion').addEventListener('close',()=>focusTaskCheck(completionId));
 $('#completion-form').addEventListener('submit',async event=>{
   event.preventDefault();
-  const value=$('#completed-by').value;
-  const person=isMember(value)?value:'';
+  const people=[...document.querySelectorAll('#completed-by input:checked')].map(input=>input.value).filter(isMember);
+  const person=people[0]||'';
   const next=entries.map(row=>{
     if(row.id!==completionId)return row;
-    if(row.type==='routine')return {...row,completed:[...new Set([...(row.completed??[]),completionDay])],completedByDate:{...row.completedByDate,[completionDay]:person},completedOnByDate:{...row.completedOnByDate,[completionDay]:today()}};
-    return {...row,done:true,completedBy:person,completedOn:today()};
+    if(row.type==='routine')return {...row,completed:[...new Set([...(row.completed??[]),completionDay])],completedByDate:{...row.completedByDate,[completionDay]:person},completedByListByDate:{...row.completedByListByDate,[completionDay]:people},completedOnByDate:{...row.completedOnByDate,[completionDay]:today()}};
+    return {...row,done:true,completedBy:person,completedByList:people,completedOn:today()};
   });
   if(await persist(next,'Aufgabe abgehakt.'))$('#completion').close();
 });
@@ -770,20 +774,21 @@ document.addEventListener('change',async event=>{
       target.checked=false;
       completionId=entry.id;completionDay=day;
       $('#completion-task').textContent=entry.title;
-      $('#completed-by').innerHTML=option('','Ohne Angabe','')+memberOptions('');
+      $('#completed-by').innerHTML=members.map(member=>'<label><input type="checkbox" value="'+member.id+'">'+memberBadge(member.id)+'</label>').join('');
       $('#completion').showModal();
-      $('#completed-by').focus();
+      $('#completion-form button[type=submit]').focus();
       return;
     }
     const next=entries.map(row=>{
       if(row.id!==check)return row;
-      if(row.type==='task')return {...row,done:false,completedBy:'',completedOn:''};
+      if(row.type==='task')return {...row,done:false,completedBy:'',completedByList:[],completedOn:''};
       if(row.type!=='routine')return {...row,done:target.checked};
       const completed=new Set(row.completed);
       if(target.checked)completed.add(day);else completed.delete(day);
       const completedByDate={...row.completedByDate};delete completedByDate[day];
+      const completedByListByDate={...row.completedByListByDate};delete completedByListByDate[day];
       const completedOnByDate={...row.completedOnByDate};delete completedOnByDate[day];
-      return {...row,completed:[...completed],completedByDate,completedOnByDate};
+      return {...row,completed:[...completed],completedByDate,completedByListByDate,completedOnByDate};
     });
     if(await persist(next,target.checked?'Abgehakt.':'Wieder geöffnet.')){
       [...document.querySelectorAll('[data-check]')].find(input=>input.dataset.check===check&&input.dataset.day===day)?.focus();

@@ -1,5 +1,5 @@
 DOMAIN = "familyhub"
-VERSION = "1.4.4"
+VERSION = "1.4.5"
 # No personal entity IDs in the code: the Alexa list is stored in the config
 # entry. Older entries without one fall back to an automatic search.
 DEFAULT_TODO = ""

@@ -40,7 +40,7 @@ export function occurrences(entry,start,end){
     const last=new Date(current.getFullYear(),current.getMonth()+1,0).getDate();
     const elapsed=(Date.parse(day+'T00:00:00Z')-Date.parse(entry.date+'T00:00:00Z'))/86400000;
     const matches=(entry.repeat==='fortnightly'&&elapsed%14===0)||entry.repeat==='daily'||(entry.repeat==='weekly'&&current.getDay()===origin.getDay())||(entry.repeat==='monthly'&&current.getDate()===Math.min(last,origin.getDate()));
-    if(matches)rows.push({...entry,date:day,done:entry.completed?.includes(day)??false,completedBy:entry.completedByDate?.[day]});
+    if(matches)rows.push({...entry,date:day,done:entry.completed?.includes(day)??false,completedBy:entry.completedByDate?.[day],completedByList:entry.completedByListByDate?.[day]});
   }
   return rows;
 }
@@ -73,6 +73,7 @@ export function parseBackup(raw){
     if(row.suggestedBy!=null && row.suggestedBy!=='' && !memberIds.has(row.suggestedBy) ||
       row.assignee!=null && row.assignee!=='' && !memberIds.has(row.assignee) ||
       row.completedBy!=null && row.completedBy!=='' && !memberIds.has(row.completedBy) ||
+      row.completedByList!=null && (!Array.isArray(row.completedByList) || !row.completedByList.every(id=>memberIds.has(id))) ||
       row.attendees!=null && (!Array.isArray(row.attendees) || !row.attendees.every(id=>memberIds.has(id))))throw Error('Die Datei enthält eine ungültige Personenzuordnung.');
     ids.add(row.id);
   }
@@ -146,7 +147,7 @@ export function completedTasks(entries,start,end){
     }
     if(entry.type==='routine')for(const day of entry.completed||[]){
       const completionDate=entry.completedOnByDate?.[day]||day;
-      if(completionDate>=start&&completionDate<=end)rows.push({...entry,completionDate,occurrenceDate:day,completedBy:entry.completedByDate?.[day],exactCompletion:!!entry.completedOnByDate?.[day]});
+      if(completionDate>=start&&completionDate<=end)rows.push({...entry,completionDate,occurrenceDate:day,completedBy:entry.completedByDate?.[day],completedByList:entry.completedByListByDate?.[day],exactCompletion:!!entry.completedOnByDate?.[day]});
     }
   }
   return rows.sort((a,b)=>(b.completionDate||'').localeCompare(a.completionDate||''));
