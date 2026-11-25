@@ -4,6 +4,12 @@ Familienplaner als Seitenleisten-Panel für Home Assistant: Wochenkalender mit K
 Personenzuordnung, Essensplan (Do–Mi, verschiebbar), Aufgaben und Routinen mit „Erledigt von“,
 Alexa-Einkaufsliste und Unternehmungen.
 
+## Neu in 1.4.6
+- Klender: Ort wird angezeigt (📍, in der Termin-Ansicht als Link zu Apple Karten).
+- Endzeit wird angezeigt (z. B. 18:10–19:00).
+- Mehrtägige Termine erscheinen an jedem Tag („Tag 2/3“).
+- „Neu“-Markierung für Termine, die in den letzten 2 Tagen in Klender angelegt oder geändert wurden.
+
 ## Neu in 1.4.5
 - Beim Abhaken können mehrere Personen als „Erledigt von“ angegeben werden; die Auswertung zählt die Aufgabe bei jeder davon.
 

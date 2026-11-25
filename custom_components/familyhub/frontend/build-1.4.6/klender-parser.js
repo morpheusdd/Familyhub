@@ -7381,6 +7381,14 @@ var localTime = (time) => {
   if (time.isDate) return "";
   return time.zone === ICALmodule.Timezone.localTimezone ? time.toString().slice(11, 16) : berlinTime.format(time.toJSDate());
 };
+var changedAt = (event) => {
+  try {
+    const value = event?.component.getFirstPropertyValue("last-modified") || event?.component.getFirstPropertyValue("created");
+    return value ? value.toJSDate().getTime() : 0;
+  } catch {
+    return 0;
+  }
+};
 var cancelled = (event) => event?.component.getFirstPropertyValue("status") === "CANCELLED";
 var normalizeName = (value) => String(value ?? "").normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase("de-DE");
 var cleaned = (value) => typeof value === "string" ? value.trim() : "";
@@ -7497,6 +7505,9 @@ function feedRows(series, start, end) {
         source: "klender",
         title,
         notes: event.description || master?.description || "",
+        location: cleaned(event.location || master?.location || ""),
+        changedAt: changedAt(event) || changedAt(master),
+        startDate: date,
         date: date < start ? start : date,
         time: date < start ? "" : time,
         category: "Klender",

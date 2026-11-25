@@ -372,3 +372,12 @@ body.kiosk[data-page="overview"] .hero-side{gap:10px}
 .move-handle,.overview-event-wrap .move-handle,.calendar-mini>.move-handle{width:18px;min-height:22px;height:22px;margin-right:4px;border-radius:5px;align-self:center}
 .grip-dots{width:8px;height:12px;background-size:4px 4px;background-image:radial-gradient(circle,currentColor 1px,transparent 1.3px)}
 @media(pointer:coarse){.move-handle,.overview-event-wrap .move-handle,.calendar-mini>.move-handle{width:20px;min-height:24px;height:24px}}
+
+/* ---------- 1.4.6: Ort, Endzeit, mehrtägige Termine, Neu ---------- */
+.new-label{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:5px;background:#f5b94a2e;color:#f5c46a;font-size:10px;font-weight:800;letter-spacing:.02em;vertical-align:middle}
+.overview-event time small{display:block;font-size:9.5px;color:var(--muted);font-weight:600;line-height:1}
+.overview-event .pin{font-size:10px;margin-left:4px;opacity:.75}
+.overview-event-wrap.continuation .overview-event{opacity:.72}
+.overview-event-wrap.continuation .overview-event time{font-size:10px}
+.event-location a{color:var(--accent);text-decoration:none;font-weight:650}
+.new-note{color:#f5c46a;font-size:12px}

@@ -211,7 +211,15 @@ function visibleRows(){
     }
     for(const original of feedEvents.values()){
       const row=applyCalendarMove(original,calendarMoves);
-      rows.push({...row,category:klenderCategories[row.id]||row.category,attendees:klenderAttendees(row)});
+      const item={...row,category:klenderCategories[row.id]||row.category,attendees:klenderAttendees(row)};
+      const first=item.startDate||item.date;
+      const span=!item.localMove&&item.endDate&&item.endDate>first?dayCount(first,item.endDate):1;
+      if(span<2){rows.push(item);continue;}
+      // A trip over several days appears on every day, numbered "Tag 2/3".
+      for(let day=item.date;day<=item.endDate&&day<=end;day=shift(day,1)){
+        const index=dayCount(first,day);
+        rows.push({...item,date:day,time:day===first?item.time:'',spanDay:index,spanDays:span,continuation:day!==first});
+      }
     }
   }
   return rows.filter(row=>{
@@ -243,11 +251,15 @@ function toolbar(){
     (['task','calendar'].includes(state.page)?'<select aria-label="Familienmitglied" data-filter="person">'+option('','Alle Personen',state.person)+option('unassigned',state.page==='task'?'Freie Aufgaben':'Ohne Zuordnung',state.person)+memberOptions(state.person)+'</select>':'')+
     '<select aria-label="Priorität" data-filter="priority">'+option('','Alle Prioritäten',state.priority)+Object.entries(priorities).map(([id,name])=>option(id,name,state.priority)).join('')+'</select></div></div>';
 }
+const dayCount=(from,to)=>Math.round((date(to)-date(from))/86400000)+1;
+const isNew=row=>row.source==='klender'&&row.changedAt>0&&Date.now()-row.changedAt<2*24*60*60*1000;
+const timeRange=row=>row.continuation?'':row.time&&row.endTime&&row.endTime!==row.time&&(!row.endDate||row.endDate===row.date)?row.time+'–'+row.endTime:row.time;
+const mapsLink=place=>'https://maps.apple.com/?q='+encodeURIComponent(place);
 function calendarRow(row,grouped){
   const fromKlender=row.source==='klender';
-  const title=fromKlender?'<div class="row-title">'+escape(row.title)+'</div>':button('edit',row.id,escape(row.title),'row-title');
-  const meta=[row.localMove?'Lokal verschoben':'',!fromKlender?'Lokal':'',!grouped&&shortDate.format(date(row.date)),fromKlender?['Klender',row.category!=='Klender'?row.category:''].filter(Boolean).join(' · '):row.category,!fromKlender&&['high','normal','low'].includes(row.priority)?priorities[row.priority]:''].filter(Boolean).map(escape).join(' · ');
-  const clock=row.time?'<time datetime="'+escape(row.date+'T'+row.time)+'">'+escape(row.time)+'</time>':'<span>Ganztägig</span>';
+  const title=fromKlender?'<div class="row-title">'+escape(row.title)+(isNew(row)?'<small class="new-label">Neu</small>':'')+'</div>':button('edit',row.id,escape(row.title),'row-title');
+  const meta=[row.spanDays?'Tag '+row.spanDay+'/'+row.spanDays:'',row.location?'📍 '+row.location:'',row.localMove?'Lokal verschoben':'',!fromKlender?'Lokal':'',!grouped&&shortDate.format(date(row.date)),fromKlender?['Klender',row.category!=='Klender'?row.category:''].filter(Boolean).join(' · '):row.category,!fromKlender&&['high','normal','low'].includes(row.priority)?priorities[row.priority]:''].filter(Boolean).map(escape).join(' · ');
+  const clock=row.time&&!row.continuation?'<time datetime="'+escape(row.date+'T'+row.time)+'">'+escape(timeRange(row))+'</time>':'<span>'+(row.continuation?'Fortsetzung':'Ganztägig')+'</span>';
   const check=fromKlender?'':'<input type="checkbox" data-check="'+escape(row.id)+'" data-day="'+escape(row.date)+'" aria-label="'+escape(row.title)+' als '+(row.done?'offen':'erledigt')+' markieren" '+(row.done?'checked':'')+'>';
   const action=fromKlender
     ?button('klender-people',row.id,icon('edit'),'icon','Familienmitglieder für '+row.title+' zuordnen')
@@ -370,8 +382,10 @@ function overviewEvent(row){
   const people=members.filter(member=>row.attendees?.includes(member.id));
   const own=row.source!=='klender';
   const label=[row.title,dayDate.format(date(row.date)),row.time||'Ganztägig',row.category,own?'Lokaler Termin':'',row.localMove?'Nur in Familyhub verschoben':'',...people.map(memberName)].filter(Boolean).join(' · ');
-  const tag=own?'<small class="local-date-label own">Lokal</small>':row.localMove?'<small class="local-date-label">Verschoben</small>':'';
-  return '<div class="overview-event-wrap">'+moveHandle(row)+button('overview-event',row.id,'<time>'+escape((row.localMove?'↪ ':'')+(row.time||'Tag'))+'</time><span class="overview-event-title">'+escape(row.title)+tag+'</span><span class="overview-portraits" aria-hidden="true">'+people.map(avatar).join('')+'</span>','overview-event',label)+'</div>';
+  const tag=(own?'<small class="local-date-label own">Lokal</small>':row.localMove?'<small class="local-date-label">Verschoben</small>':'')+(isNew(row)?'<small class="new-label">Neu</small>':'');
+  const clock=row.continuation?row.spanDay+'/'+row.spanDays:(row.localMove?'↪ ':'')+(row.time||'Tag');
+  const endClock=!row.continuation&&row.time&&timeRange(row)!==row.time?'<small>'+escape(row.endTime)+'</small>':'';
+  return '<div class="overview-event-wrap'+(row.continuation?' continuation':'')+'">'+moveHandle(row)+button('overview-event',row.id,'<time>'+escape(clock)+endClock+'</time><span class="overview-event-title">'+escape(row.title)+(row.location?'<span class="pin" aria-hidden="true">📍</span>':'')+tag+'</span><span class="overview-portraits" aria-hidden="true">'+people.map(avatar).join('')+'</span>','overview-event',label)+'</div>';
 }
 /* ---------- Weather (1.4.0) ---------- */
 const OVERVIEW_DAYS=7;
@@ -459,7 +473,9 @@ function openOverviewEvent(id){
   const row=visibleRows().find(item=>item.type==='calendar'&&item.id===id);
   if(!row)return;
   $('#event-detail-title').textContent=row.title;
-  $('#event-detail-body').innerHTML='<p>'+escape(fullDate.format(date(row.date))+' · '+(row.time||'Ganztägig'))+'</p>'+(row.category?'<p>Kategorie: '+escape(row.category)+'</p>':'')+attendeeAvatars(row.attendees)+(row.localMove?'<p class="local-move-note">Nur in Familyhub verschoben. Original in Klender: '+escape(shortDate.format(date(row.originalDate)))+'.</p>'+button('restore-calendar-move',row.id,'Klender-Datum wiederherstellen','ghost'):'')+(row.notes?'<p class="event-detail-notes">'+escape(row.notes)+'</p>':'')+'<div class="dialog-actions">'+button(row.source==='klender'?'klender-people':'edit',row.id,row.source==='klender'?'Personen & Kategorie':'Termin bearbeiten','ghost')+'</div>';
+  const span=row.spanDays?' – '+fullDate.format(date(row.endDate))+' ('+row.spanDays+' Tage)':'';
+  const firstDay=row.startDate&&row.spanDays?row.startDate:row.date;
+  $('#event-detail-body').innerHTML='<p>'+escape(fullDate.format(date(firstDay))+span+' · '+(row.time?timeRange({...row,continuation:false})+' Uhr':'Ganztägig'))+'</p>'+(isNew(row)?'<p class="new-note">Neu bzw. geändert in Klender: '+escape(new Intl.DateTimeFormat('de-DE',{dateStyle:'medium',timeStyle:'short',timeZone:'Europe/Berlin'}).format(new Date(row.changedAt)))+'</p>':'')+(row.location?'<p class="event-location">📍 <a href="'+escape(mapsLink(row.location))+'" target="_blank" rel="noopener noreferrer">'+escape(row.location)+'</a></p>':'')+(row.category?'<p>Kategorie: '+escape(row.category)+'</p>':'')+attendeeAvatars(row.attendees)+(row.localMove?'<p class="local-move-note">Nur in Familyhub verschoben. Original in Klender: '+escape(shortDate.format(date(row.originalDate)))+'.</p>'+button('restore-calendar-move',row.id,'Klender-Datum wiederherstellen','ghost'):'')+(row.notes?'<p class="event-detail-notes">'+escape(row.notes)+'</p>':'')+'<div class="dialog-actions">'+button(row.source==='klender'?'klender-people':'edit',row.id,row.source==='klender'?'Personen & Kategorie':'Termin bearbeiten','ghost')+'</div>';
   $('#event-details').showModal();
 }
 function monthCalendar(rows){
@@ -483,7 +499,7 @@ function footer(){
 }
 function settings(){
   return '<div class="grid">'+
-    '<section class="panel settings"><h2>Familienmitglieder</h2><p>Familyhub 1.4.5</p><p>Die Namen gelten im Kalender und in der Aufgabenliste. Profilbilder werden in Home Assistant gespeichert.</p><form id="family-form" class="family-form">'+
+    '<section class="panel settings"><h2>Familienmitglieder</h2><p>Familyhub 1.4.6</p><p>Die Namen gelten im Kalender und in der Aufgabenliste. Profilbilder werden in Home Assistant gespeichert.</p><form id="family-form" class="family-form">'+
     members.map(member=>'<div class="family-member"><label>Familienname<input name="'+member.id+'" aria-label="'+member.name+'" maxlength="45" value="'+escape(memberNames[member.id]||'')+'" placeholder="'+member.name+'"></label><div class="portrait-editor" id="portrait-'+member.id+'">'+portraitEditor(member)+'</div></div>').join('')+
     '<button class="primary" type="submit">Namen speichern</button></form></section>'+
     '<section class="panel settings"><h2>Klender abonnieren</h2><p>Kopiere in Klender unter „Termine exportieren“ den iCalendar-Link. Teilnehmernamen aus dem Abo werden mit den Namen deiner Familienmitglieder abgeglichen. Home Assistant aktualisiert Klender alle 15 Minuten, auch bei geschlossener Ansicht.</p>'+
@@ -816,7 +832,7 @@ document.addEventListener('change',async event=>{
   }catch(error){notify(error instanceof SyntaxError?'Ungültige JSON-Datei.':error.message);}
 });
 function moveHandle(row){
-  if(!['meal','calendar'].includes(row.type))return '';
+  if(!['meal','calendar'].includes(row.type)||row.continuation)return '';
   return '<button type="button" class="move-handle" data-move-id="'+escape(row.id)+'" data-move-kind="'+row.type+'" aria-label="'+escape(row.title)+' verschieben" title="Ziehen oder antippen zum Verschieben"><span class="grip-dots" aria-hidden="true"></span></button>';
 }
 function moveDays(type,rows){
