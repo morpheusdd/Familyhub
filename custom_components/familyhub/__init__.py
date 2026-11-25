@@ -12,7 +12,8 @@ from urllib.parse import urljoin, urlsplit, urlunsplit
 
 import voluptuous as vol
 from homeassistant.components import frontend as ha_frontend, panel_custom, websocket_api
-from homeassistant.components.http import StaticPathConfig
+from aiohttp import web
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import Context
 from homeassistant.auth.permissions.const import POLICY_READ, POLICY_CONTROL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -280,17 +281,53 @@ async def async_setup(hass, config):
     return True
 
 
+ASSETS = Path(__file__).parent / "frontend"
+
+
+def _asset_path(build, filename):
+    """Find an asset; fall back to the newest build folder.
+
+    After a Marketplace update the old build folder is gone while Home Assistant
+    still runs the previous version until it restarts. Serving the files from
+    the current folder keeps the panel working in that window.
+    """
+    if not re.fullmatch(r"build-[0-9]+(?:\.[0-9]+)*", build):
+        return None
+    folder = ASSETS / build
+    if not folder.is_dir():
+        builds = [p for p in ASSETS.glob("build-*") if p.is_dir()]
+        if not builds:
+            return None
+        folder = max(builds, key=lambda p: [int(x) for x in p.name[6:].split(".") if x.isdigit()])
+    path = (folder / filename).resolve()
+    if folder.resolve() not in path.parents or not path.is_file():
+        return None
+    return path
+
+
+class FamilyhubAssetsView(HomeAssistantView):
+    """Static Familyhub frontend files (no secrets, like the former static path)."""
+
+    url = "/familyhub-assets/{build}/{filename:.+}"
+    name = "familyhub:assets"
+    requires_auth = False
+
+    async def get(self, request, build, filename):
+        path = await request.app["hass"].async_add_executor_job(_asset_path, build, filename)
+        if path is None:
+            raise web.HTTPNotFound()
+        return web.FileResponse(path, headers={"Cache-Control": "no-cache"})
+
+
 async def async_setup_entry(hass, entry):
     hub = Hub(hass, entry)
     await hub.load()
     hass.data[DOMAIN] = hub
     if not hass.data.get("familyhub_static_registered"):
-        await hass.http.async_register_static_paths([
-            StaticPathConfig("/familyhub-assets", str(Path(__file__).parent / "frontend"), False)
-        ])
+        hass.http.register_view(FamilyhubAssetsView())
         hass.data["familyhub_static_registered"] = True
     await panel_custom.async_register_panel(
-        hass, frontend_url_path="familyhub", webcomponent_name="familyhub-panel-" + VERSION.replace(".", "-"),
+        hass, frontend_url_path="familyhub", webcomponent_name="familyhub-panel",
         sidebar_title="Familyhub", sidebar_icon="mdi:home-heart",
         module_url=f"/familyhub-assets/build-{VERSION}/panel.js",
         embed_iframe=False, require_admin=False,

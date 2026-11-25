@@ -502,7 +502,7 @@ function footer(){
 }
 function settings(){
   return '<div class="grid">'+
-    '<section class="panel settings"><h2>Familienmitglieder</h2><p>Familyhub 1.4.7</p><p>Die Namen gelten im Kalender und in der Aufgabenliste. Profilbilder werden in Home Assistant gespeichert.</p><form id="family-form" class="family-form">'+
+    '<section class="panel settings"><h2>Familienmitglieder</h2><p>Familyhub 1.4.8</p><p>Die Namen gelten im Kalender und in der Aufgabenliste. Profilbilder werden in Home Assistant gespeichert.</p><form id="family-form" class="family-form">'+
     members.map(member=>'<div class="family-member"><label>Familienname<input name="'+member.id+'" aria-label="'+member.name+'" maxlength="45" value="'+escape(memberNames[member.id]||'')+'" placeholder="'+member.name+'"></label><div class="portrait-editor" id="portrait-'+member.id+'">'+portraitEditor(member)+'</div></div>').join('')+
     '<button class="primary" type="submit">Namen speichern</button></form></section>'+
     '<section class="panel settings"><h2>Klender abonnieren</h2><p>Kopiere in Klender unter „Termine exportieren“ den iCalendar-Link. Teilnehmernamen aus dem Abo werden mit den Namen deiner Familienmitglieder abgeglichen. Home Assistant aktualisiert Klender alle 15 Minuten, auch bei geschlossener Ansicht.</p>'+

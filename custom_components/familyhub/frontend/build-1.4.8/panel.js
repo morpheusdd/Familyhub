@@ -1,5 +1,6 @@
-const FH_VERSION='1.4.7';
-const FH_TAG='familyhub-panel-'+FH_VERSION.replaceAll('.','-');
+const FH_VERSION='1.4.8';
+// Stable element name: an older backend that has not restarted yet still finds the panel.
+const FH_TAG='familyhub-panel';
 const ACTIONS=['snapshot','write','calendar','calendar_remove','shopping/list','shopping/add','shopping/check','settings/todo','weather','settings/weather'];
 
 class FamilyhubPanel extends HTMLElement {
