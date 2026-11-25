@@ -4,6 +4,9 @@ Familienplaner als Seitenleisten-Panel für Home Assistant: Wochenkalender mit K
 Personenzuordnung, Essensplan (Do–Mi, verschiebbar), Aufgaben und Routinen mit „Erledigt von“,
 Alexa-Einkaufsliste und Unternehmungen.
 
+## Neu in 1.4.7
+- Müllabfuhr-Termine (Bio-, Rest-, Papier-, Gelbe Tonne, Gelber Sack) ohne Ortsangabe.
+
 ## Neu in 1.4.6
 - Klender: Ort wird angezeigt (📍, in der Termin-Ansicht als Link zu Apple Karten).
 - Endzeit wird angezeigt (z. B. 18:10–19:00).

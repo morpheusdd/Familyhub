@@ -212,6 +212,8 @@ function visibleRows(){
     for(const original of feedEvents.values()){
       const row=applyCalendarMove(original,calendarMoves);
       const item={...row,category:klenderCategories[row.id]||row.category,attendees:klenderAttendees(row)};
+      // Waste collection always happens at home, so the address only adds noise.
+      if(isWaste(item.title))item.location='';
       const first=item.startDate||item.date;
       const span=!item.localMove&&item.endDate&&item.endDate>first?dayCount(first,item.endDate):1;
       if(span<2){rows.push(item);continue;}
@@ -251,6 +253,7 @@ function toolbar(){
     (['task','calendar'].includes(state.page)?'<select aria-label="Familienmitglied" data-filter="person">'+option('','Alle Personen',state.person)+option('unassigned',state.page==='task'?'Freie Aufgaben':'Ohne Zuordnung',state.person)+memberOptions(state.person)+'</select>':'')+
     '<select aria-label="Priorität" data-filter="priority">'+option('','Alle Prioritäten',state.priority)+Object.entries(priorities).map(([id,name])=>option(id,name,state.priority)).join('')+'</select></div></div>';
 }
+const isWaste=title=>/(tonne|müll|muell|abfall|altpapier|papiertonne|wertstoff|gelber?\s*sack)/i.test(String(title||''))||/^\s*papier\s*$/i.test(String(title||''));
 const dayCount=(from,to)=>Math.round((date(to)-date(from))/86400000)+1;
 const isNew=row=>row.source==='klender'&&row.changedAt>0&&Date.now()-row.changedAt<2*24*60*60*1000;
 const timeRange=row=>row.continuation?'':row.time&&row.endTime&&row.endTime!==row.time&&(!row.endDate||row.endDate===row.date)?row.time+'–'+row.endTime:row.time;
@@ -499,7 +502,7 @@ function footer(){
 }
 function settings(){
   return '<div class="grid">'+
-    '<section class="panel settings"><h2>Familienmitglieder</h2><p>Familyhub 1.4.6</p><p>Die Namen gelten im Kalender und in der Aufgabenliste. Profilbilder werden in Home Assistant gespeichert.</p><form id="family-form" class="family-form">'+
+    '<section class="panel settings"><h2>Familienmitglieder</h2><p>Familyhub 1.4.7</p><p>Die Namen gelten im Kalender und in der Aufgabenliste. Profilbilder werden in Home Assistant gespeichert.</p><form id="family-form" class="family-form">'+
     members.map(member=>'<div class="family-member"><label>Familienname<input name="'+member.id+'" aria-label="'+member.name+'" maxlength="45" value="'+escape(memberNames[member.id]||'')+'" placeholder="'+member.name+'"></label><div class="portrait-editor" id="portrait-'+member.id+'">'+portraitEditor(member)+'</div></div>').join('')+
     '<button class="primary" type="submit">Namen speichern</button></form></section>'+
     '<section class="panel settings"><h2>Klender abonnieren</h2><p>Kopiere in Klender unter „Termine exportieren“ den iCalendar-Link. Teilnehmernamen aus dem Abo werden mit den Namen deiner Familienmitglieder abgeglichen. Home Assistant aktualisiert Klender alle 15 Minuten, auch bei geschlossener Ansicht.</p>'+
