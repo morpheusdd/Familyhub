@@ -1,7 +1,7 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101319"><meta name="description" content="Deine Familyhub für Aufgaben, Einkäufe, Termine und Mahlzeiten."><title>Familyhub 1.4.3</title><link rel="stylesheet" href="style.css"></head>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101319"><meta name="description" content="Deine Familyhub für Aufgaben, Einkäufe, Termine und Mahlzeiten."><title>Familyhub 1.4.4</title><link rel="stylesheet" href="style.css"></head>
 <body><aside><div class="brand"><span id="logo"></span><div>Familyhub<small>FAMILIENPLANER</small></div></div><nav aria-label="Bereiche" id="nav"></nav><div class="aside-bottom" id="aside-bottom"></div></aside>
-<main><header class="top"><span id="breadcrumb"></span><span class="local"><i></i> Familyhub 1.4.3</span></header><div class="content" id="app"></div></main>
+<main><header class="top"><span id="breadcrumb"></span><span class="local"><i></i> Familyhub 1.4.4</span></header><div class="content" id="app"></div></main>
 <dialog id="event-details" aria-labelledby="event-detail-title"><div class="dialog-head"><h2 id="event-detail-title"></h2><button class="icon close" type="button" aria-label="Schließen">×</button></div><div id="event-detail-body"></div></dialog>
 <dialog id="move-editor" aria-labelledby="move-title"><form id="move-form"><div class="dialog-head"><h2 id="move-title">Verschieben</h2><button class="icon close" type="button" aria-label="Schließen">×</button></div><p id="move-name"></p><label>Zieldatum<input id="move-date" type="date" required></label><div id="move-meal-options"><label>Aktion<select id="move-mode"><option value="move">Zusätzlich auf diesen Tag verschieben</option><option id="move-swap-option" value="swap">Mit einem Gericht dieses Tages tauschen</option></select></label><label id="move-target-label">Tauschen mit<select id="move-targets"></select></label></div><p id="move-hint" class="move-help"></p><div class="dialog-actions"><button class="ghost close" type="button">Abbrechen</button><button class="primary" type="submit">Speichern</button></div></form></dialog>
 <dialog id="editor"><form id="entry"><div class="dialog-head"><h2 id="dialog-title"></h2><button class="icon close" type="button" aria-label="Schließen">×</button></div><div id="fields"></div><div class="dialog-actions"><button class="danger" type="button" id="delete">Löschen</button><button type="button" class="ghost close">Abbrechen</button><button class="primary" type="submit">Speichern</button></div></form></dialog>
@@ -9,7 +9,7 @@
 <form id="completion-form">
 <div class="dialog-head"><h2 id="completion-title">Aufgabe abschließen</h2></div>
 <p id="completion-task"></p>
-<label>Erledigt von<select id="completed-by" name="completedBy" required></select></label>
+<label>Erledigt von (optional)<select id="completed-by" name="completedBy"></select></label>
 <div class="dialog-actions"><button type="button" class="ghost" data-action="cancel-completion">Abbrechen</button><button class="primary" type="submit">Als erledigt speichern</button></div>
 </form>
 </dialog>

@@ -73,7 +73,10 @@ async function saveAvatar(id,photo){
   if(editor)editor.innerHTML=portraitEditor(members.find(member=>member.id===id));
   notify(photo?'Profilbild gespeichert.':'Profilbild entfernt.');
 }
-const attendeePicker=ids=>'<fieldset class="full attendee-picker"><legend>Familienmitglieder</legend><div>'+
+// Tasks and routines keep several responsible people in `attendees`; older
+// entries with a single `assignee` are still read.
+const assignedOf=row=>Array.isArray(row?.attendees)&&row.attendees.length?row.attendees.filter(isMember):[row?.assignee].filter(Boolean);
+const attendeePicker=(ids,legend='Familienmitglieder')=>'<fieldset class="full attendee-picker"><legend>'+legend+'</legend><div>'+
   members.map(member=>'<label><input type="checkbox" name="attendees" value="'+member.id+'" '+(ids?.includes(member.id)?'checked':'')+'>'+memberBadge(member.id)+'</label>').join('')+'</div></fieldset>';
 
 const klenderPeopleKey='haushaltszentrale-klender-people-v1';
@@ -166,7 +169,7 @@ async function saveKlenderPeople(ids){
 const shopGroup=row=>row.category||'';
 function matchesPerson(row){
   if(!state.person)return true;
-  const assigned=row.type==='calendar'?row.attendees||[]:[row.assignee].filter(Boolean);
+  const assigned=row.type==='calendar'?row.attendees||[]:assignedOf(row);
   if(state.person==='unassigned')return !assigned.length;
   return assigned.includes(state.person)||(row.type==='task'&&row.done&&row.completedBy===state.person);
 }
@@ -258,7 +261,7 @@ function rowHTML(row,grouped){
   const extra={buy:row.quantity,calendar:row.time, routine:intervals[row.repeat]}[row.type];
   const meta=[dateLabel,extra,row.type==='buy'&&(!grouped||row.list&&listName(row)!=='Standard')?listName(row):'',row.type==='buy'&&grouped?'':row.category].filter(Boolean).map(escape).join(' · ');
   const people=['task','routine'].includes(row.type)
-      ? (row.assignee?memberBadge(row.assignee,'Zuständig: '):'<span class="member-badge free">Freie Aufgabe</span>')+
+      ? (assignedOf(row).length?assignedOf(row).map(id=>memberBadge(id,'Zuständig: ')).join(''):'<span class="member-badge free">Freie Aufgabe</span>')+
         (row.done?memberBadge(row.completedBy,'Erledigt von: '):'')
       : ['mealidea','outing'].includes(row.type)?memberBadge(row.suggestedBy,'Vorgeschlagen von: '):'';
   const late=!row.done&&row.date&&row.date<today()&&['task','buy','routine'].includes(row.type);
@@ -350,10 +353,10 @@ async function synchronize(){
   finally{syncBusy=false;}
 }
 function overviewTask(row){
-  const assigned=members.find(member=>member.id===row.assignee);
-  const meta=[row.date===today()?'Heute':row.date?shortDate.format(date(row.date)):'Ohne Fälligkeit',row.type==='routine'?intervals[row.repeat]:'',assigned?memberName(assigned):'Freie Aufgabe'].filter(Boolean).join(' · ');
+  const assigned=members.filter(member=>assignedOf(row).includes(member.id));
+  const meta=[row.date===today()?'Heute':row.date?shortDate.format(date(row.date)):'Ohne Fälligkeit',row.type==='routine'?intervals[row.repeat]:'',assigned.length?assigned.map(memberName).join(', '):'Freie Aufgabe'].filter(Boolean).join(' · ');
   return '<div class="row overview-task"><input type="checkbox" data-check="'+escape(row.id)+'" data-day="'+escape(row.date)+'" aria-label="'+escape(row.title)+' abschließen"><div class="row-main">'+button('edit',row.id,escape(row.title),'row-title')+'<div class="row-meta">'+escape(meta)+'</div></div>'+
-    (['high','normal','low'].includes(row.priority)?'<span class="pill '+row.priority+'">'+priorities[row.priority]+'</span>':'')+(assigned?avatar(assigned):'')+'</div>';
+    (['high','normal','low'].includes(row.priority)?'<span class="pill '+row.priority+'">'+priorities[row.priority]+'</span>':'')+(assigned.length?'<span class="overview-portraits" aria-hidden="true">'+assigned.map(avatar).join('')+'</span>':'')+'</div>';
 }
 function overviewCard(type,rows,limit=4){
   return '<section class="panel '+type+'"><div class="panel-head">'+glyph(type)+'<h2>'+sections[type].name+'</h2><span class="overview-count">'+rows.length+' offen</span>'+button('page',type,icon('arrow'),'icon',sections[type].name+' öffnen')+'</div>'+
@@ -477,7 +480,7 @@ function footer(){
 }
 function settings(){
   return '<div class="grid">'+
-    '<section class="panel settings"><h2>Familienmitglieder</h2><p>Familyhub 1.4.3</p><p>Die Namen gelten im Kalender und in der Aufgabenliste. Profilbilder werden in Home Assistant gespeichert.</p><form id="family-form" class="family-form">'+
+    '<section class="panel settings"><h2>Familienmitglieder</h2><p>Familyhub 1.4.4</p><p>Die Namen gelten im Kalender und in der Aufgabenliste. Profilbilder werden in Home Assistant gespeichert.</p><form id="family-form" class="family-form">'+
     members.map(member=>'<div class="family-member"><label>Familienname<input name="'+member.id+'" aria-label="'+member.name+'" maxlength="45" value="'+escape(memberNames[member.id]||'')+'" placeholder="'+member.name+'"></label><div class="portrait-editor" id="portrait-'+member.id+'">'+portraitEditor(member)+'</div></div>').join('')+
     '<button class="primary" type="submit">Namen speichern</button></form></section>'+
     '<section class="panel settings"><h2>Klender abonnieren</h2><p>Kopiere in Klender unter „Termine exportieren“ den iCalendar-Link. Teilnehmernamen aus dem Abo werden mit den Namen deiner Familienmitglieder abgeglichen. Home Assistant aktualisiert Klender alle 15 Minuten, auch bei geschlossener Ansicht.</p>'+
@@ -544,7 +547,7 @@ function formFields(type,row={}){
     (type==='buy'?field('quantity','Menge','text',row.quantity,'maxlength="60"')+field('list','Einkaufsliste','text',row.list??(state.shoppingList||'Standard'),'list="lists" maxlength="70"')+'<datalist id="lists">'+listNames().map(name=>option(name,name)).join('')+'</datalist>':'')+
     (type==='calendar'?field('time','Uhrzeit','time',row.time)+
       attendeePicker(row.attendees):'')+
-    (['task','routine'].includes(type)?'<label>Zuständig<select name="assignee">'+option('','Freie Aufgabe',row.assignee||'')+memberOptions(row.assignee)+'</select></label>'+
+    (['task','routine'].includes(type)?attendeePicker(assignedOf(row),'Zuständig – nichts ankreuzen = freie Aufgabe')+
       (row.done?'<label>Erledigt von<select name="completedBy">'+option('','Ohne Angabe',row.completedBy||'')+memberOptions(row.completedBy)+'</select></label>':''):'')+
     (['mealidea','outing'].includes(type)?'<label>Vorgeschlagen von<select name="suggestedBy">'+option('','Ohne Angabe',row.suggestedBy||'')+memberOptions(row.suggestedBy)+'</select></label>':'')+
     (['meal','mealidea','outing'].includes(type)?field('url','Rezeptlink (z. B. Choosy)','url',row.url,'placeholder="https://…" maxlength="1500"',true):'')+
@@ -581,7 +584,8 @@ $('#entry').addEventListener('submit',async event=>{
   event.preventDefault();
   const form=new FormData(event.target);
   const values=Object.fromEntries([...form].map(([k,v])=>[k,v.trim()]));
-  if(editing.type==='calendar')values.attendees=form.getAll('attendees');
+  if(['calendar','task','routine'].includes(editing.type))values.attendees=form.getAll('attendees').filter(isMember);
+  if(['task','routine'].includes(editing.type))values.assignee='';
   if(!values.title){const title=$('#fields [name=title]');title.setCustomValidity('Bitte gib einen Titel ein.');title.reportValidity();title.addEventListener('input',()=>title.setCustomValidity(''),{once:true});return;}
   if(values.url&&!safeURL(values.url)){const url=$('#fields [name=url]');url.setCustomValidity('Bitte verwende einen HTTP- oder HTTPS-Link.');url.reportValidity();url.addEventListener('input',()=>url.setCustomValidity(''),{once:true});return;}
   const previous=entries.find(row=>row.id===editing.id);
@@ -599,8 +603,8 @@ function focusTaskCheck(id){
 $('#completion').addEventListener('close',()=>focusTaskCheck(completionId));
 $('#completion-form').addEventListener('submit',async event=>{
   event.preventDefault();
-  const person=$('#completed-by').value;
-  if(!isMember(person))return;
+  const value=$('#completed-by').value;
+  const person=isMember(value)?value:'';
   const next=entries.map(row=>{
     if(row.id!==completionId)return row;
     if(row.type==='routine')return {...row,completed:[...new Set([...(row.completed??[]),completionDay])],completedByDate:{...row.completedByDate,[completionDay]:person},completedOnByDate:{...row.completedOnByDate,[completionDay]:today()}};
@@ -766,7 +770,7 @@ document.addEventListener('change',async event=>{
       target.checked=false;
       completionId=entry.id;completionDay=day;
       $('#completion-task').textContent=entry.title;
-      $('#completed-by').innerHTML=option('','Person auswählen',entry.assignee||'')+memberOptions(entry.assignee);
+      $('#completed-by').innerHTML=option('','Ohne Angabe','')+memberOptions('');
       $('#completion').showModal();
       $('#completed-by').focus();
       return;
