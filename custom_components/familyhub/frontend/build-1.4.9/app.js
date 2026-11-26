@@ -1015,7 +1015,18 @@ function kioskTick(){
   // Reload once at night to keep a tablet that runs for weeks fresh.
   if(toMinutes(clockText())===210&&performance.now()>15*60*1000&&!busy)location.reload();
 }
+// Time-based labels ("Neu" for 48 hours, "Heute") would otherwise stay as they were
+// at the last render, because the overview only re-renders when data changes.
+let renderStamp=today()+'|'+Math.floor(Date.now()/(15*60*1000));
+function refreshTimeLabels(){
+  const stamp=today()+'|'+Math.floor(Date.now()/(15*60*1000));
+  if(stamp===renderStamp||!['overview','calendar'].includes(state.page))return;
+  if(document.querySelector('dialog[open]')||document.activeElement?.matches('input,textarea,select')||Date.now()-lastActivity<60*1000)return;
+  renderStamp=stamp;
+  render();
+}
 function kioskMinute(){
+  refreshTimeLabels();
   if(kiosk.on&&kiosk.shift&&new Date().getMinutes()%2===0){
     document.body.style.setProperty('--shift-x',Math.round(Math.random()*12-6)+'px');
     document.body.style.setProperty('--shift-y',Math.round(Math.random()*12-6)+'px');

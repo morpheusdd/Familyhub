@@ -7,6 +7,7 @@ Alexa-Einkaufsliste und Unternehmungen.
 ## Neu in 1.4.9
 
 - Behoben: In Klender gelöschte einzelne Termine einer Serie (z. B. jedes zweite Wochenende) wurden teils weiter angezeigt. Die Kalender-Bibliothek übersprang Ausnahmen nicht zuverlässig.
+- Behoben: Die Übersicht zeigte „Neu“ (und nach Mitternacht „Heute“) mit dem Stand der letzten Anzeige. Übersicht und Kalender werden jetzt alle 15 Minuten neu gezeichnet, wenn niemand gerade tippt.
 
 ## Neu in 1.4.8
 
