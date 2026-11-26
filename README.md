@@ -4,6 +4,10 @@ Familienplaner als Seitenleisten-Panel für Home Assistant: Wochenkalender mit K
 Personenzuordnung, Essensplan (Do–Mi, verschiebbar), Aufgaben und Routinen mit „Erledigt von“,
 Alexa-Einkaufsliste und Unternehmungen.
 
+## Neu in 1.4.9
+
+- Behoben: In Klender gelöschte einzelne Termine einer Serie (z. B. jedes zweite Wochenende) wurden teils weiter angezeigt. Die Kalender-Bibliothek übersprang Ausnahmen nicht zuverlässig.
+
 ## Neu in 1.4.8
 
 - Robuster gegen Updates ohne Neustart: Fehlt der angefragte Build-Ordner, liefert Familyhub die Dateien aus dem aktuellen Ordner aus. Die Meldung „Unable to load custom panel“ zwischen Update und Neustart tritt damit nicht mehr auf.

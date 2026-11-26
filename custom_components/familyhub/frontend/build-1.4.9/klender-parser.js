@@ -6620,15 +6620,16 @@ var RecurExpansion = class {
         this._nextRuleDay();
       }
       this.last = next;
-      if (this.exDate) {
-        compare = this._compare_special(this.last, this.exDate);
-        if (compare > 0) {
-          this._nextExDay();
-        }
-        if (compare === 0) {
-          this._nextExDay();
-          continue;
-        }
+      // Familyhub patch: skip every EXDATE that lies before this occurrence.
+      // Upstream advanced only one per step, so exclusions that match no
+      // occurrence (Klender also excludes Sat/Sun of a weekend) made later
+      // deletions be ignored.
+      while (this.exDate && this._compare_special(this.last, this.exDate) > 0) {
+        this._nextExDay();
+      }
+      if (this.exDate && this._compare_special(this.last, this.exDate) === 0) {
+        this._nextExDay();
+        continue;
       }
       return this.last;
     }
